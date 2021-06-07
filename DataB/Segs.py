@@ -13,10 +13,10 @@ import pickle
 sns.set()
 plt.rcParams["figure.dpi"]=140;
 # print(os.listdir())
-train_csv=pd.read_csv('train.csv');
+train_csv=pd.read_csv('../Supporter_/train.csv');
 Nulls=train_csv.isna().sum().sort_values(ascending=False)
 # print(Nulls)
-path='./train'
+path='../Supporter_/train'
 print(os.listdir(path))
 signal_=False
 
@@ -30,9 +30,9 @@ def cats_(cat,pat,Is,m=1e20):
 I=[]
 M=[]
 if 'Is.pickle' and 'Ms.pickle' in os.listdir(path):
-	with open('./train/Is.pickle','rb') as f:
+	with open('../Supporter_/train/Is.pickle','rb') as f:
 		I=pickle.load(f)
-	with open('./train/Ms.pickle','rb') as f:
+	with open('../Supporter_/train/Ms.pickle','rb') as f:
 		M=pickle.load(f)
 	print("Data Loaded from previous exec")
 else:
@@ -46,9 +46,9 @@ else:
 		t2.join()
 	except:
 		raise('Some error occurred during reading the images and masks')
-	with open("./train/Is.pickle",'wb') as pkl:
+	with open("../Supporter_/train/Is.pickle",'wb') as pkl:
 		pickle.dump(I,pkl)
-	with open("./train/Ms.pickle","wb") as pkl:
+	with open("../Suporter_/train/Ms.pickle","wb") as pkl:
 		pickle.dump(M,pkl)
 	print('Data is saved in corresponding files')
 
@@ -76,7 +76,7 @@ if signal_:
 	for k in Ts:
 		k.join()
 
-	with open('./train/Ms.pickel','wb') as f:
+	with open('../Supporter_/train/Ms.pickel','wb') as f:
 		pickle.dump(M,f)
 
 fig,axs=plt.subplots(4,2,figsize=(9,9))
