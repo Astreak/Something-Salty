@@ -68,7 +68,7 @@ def main(path):
 	valset=D.DataLoader(dataset=valset,shuffle=True,batch_size=16)
 	return trainset,valset;
 
-IS,MS=main('../Supporter_/train');
+Train,Val=main('../Supporter_/train');
 if __name__=="__main__":
 	pass
 	#Train,Val=main('../Supporter_/train');
