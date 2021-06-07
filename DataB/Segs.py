@@ -10,8 +10,8 @@ import multiprocessing as mp
 import matplotlib.pyplot as plt
 from PIL import Image
 import pickle
-sns.set()
 plt.rcParams["figure.dpi"]=140;
+plt.style.use("fivethirtyeight")
 # print(os.listdir())
 train_csv=pd.read_csv('../Supporter_/train.csv');
 Nulls=train_csv.isna().sum().sort_values(ascending=False)
@@ -38,8 +38,8 @@ if 'Is.pickle' and 'Ms.pickle' in os.listdir(path):
 else:
 	signal_=True
 	try:
-		t1=Thread(target=cats_,args=('images',os.path.join(path,'images'),I,))
-		t2=Thread(target=cats_,args=('masks',os.path.join(path,'masks'),M,))
+		t1=Thread(target=cats_,args=('../Supporter_/images',os.path.join(path,'images'),I,))
+		t2=Thread(target=cats_,args=('../Supporter_/masks',os.path.join(path,'masks'),M,))
 		t1.start()
 		t2.start()
 		t1.join()
@@ -48,7 +48,7 @@ else:
 		raise('Some error occurred during reading the images and masks')
 	with open("../Supporter_/train/Is.pickle",'wb') as pkl:
 		pickle.dump(I,pkl)
-	with open("../Suporter_/train/Ms.pickle","wb") as pkl:
+	with open("../Supporter_/train/Ms.pickle","wb") as pkl:
 		pickle.dump(M,pkl)
 	print('Data is saved in corresponding files')
 
@@ -58,7 +58,7 @@ else:
 def clip_(image,indx,List):
 	for i in range(image.shape[0]):
 		for j in range(image.shape[1]):
-			if image[i][j]<=0.15:
+			if image[i][j]<=0.0000015:
 				image[i][j]=0.
 			else:
 				image[i][j]=1.
@@ -75,15 +75,17 @@ if signal_:
 		Ts.append(t)
 	for k in Ts:
 		k.join()
-
-	with open('../Supporter_/train/Ms.pickel','wb') as f:
+	with open('../Supporter_/train/Ms.pickle','wb') as f:
 		pickle.dump(M,f)
 
-fig,axs=plt.subplots(4,2,figsize=(9,9))
-for i in range(4,8):
-	axs[i-4][0].imshow(I[i])
-	axs[i-4][1].imshow(M[i])
-plt.tight_layout()
-plt.axis("off")
-plt.show()
-
+if __name__=="__main__":
+	fig=plt.figure(figsize=(12,12))
+	gs=plt.GridSpec(2,3)
+	ax1=fig.add_subplot(gs[0,:]);
+	ax2=fig.add_subplot(gs[1,:-1]);
+	ax1.set_title("Image ");
+	ax2.set_title("Mask");
+	print(I[-10].shape,M[-10].shape)
+	ax1.imshow(I[-10],cmap=plt.cm.jet);
+	ax2.imshow(M[-10]);
+	plt.show()
