@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import sys
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as opt
 from mo import IS,MS
+
 # Encoder states
 # 64X64X3----> conv2d*3 64X64X16 ---> Maxpool --> 32X32X16
 # 32X32X16 -----> conv2d*3 32X32X64--->Maxpool ---> 16X16X64
@@ -22,30 +24,83 @@ class DownSampling(nn.Module):
 		self.ul2=self.__conv2d(64);
 		self.l3=nn.Conv2d(64,128,(3,3),padding=1)
 		self.ul3=self.__conv2d(128);
+		self.r=nn.ReLU(inplace=True)
 
-	def __conv2d(self,dim,bais=False):
-		x=nn.BatchNorm2d(dim);
-		x=nn.Conv2d(dim,dim,(3,3),padding=1,bias=False);
-		x=nn.Conv2d(dim,dim,(3,3),padding=1,bias=False);
+	def __conv2d(self,dim,bias=False):
+		x=nn.Sequential(
+		       nn.BatchNorm2d(dim),
+		       nn.Conv2d(dim,dim,3,bias=bias,padding=1),
+		       nn.ReLU(inplace=True),
+		       nn.Conv2d(dim,dim,3,bias=bias,padding=1),
+		       nn.ReLU(inplace=True)
+			)
 		return x;
 	def forward(self,x):
-		x=self.l1(x)
+		L=[]
+		x=self.r(self.l1(x))
 		x=self.ul1(x)
+		L.append(x)
 		x=self.mp(x)
-		x=self.l2(x)
+		x=self.r(self.l2(x))
 		x=self.ul2(x)
+		L.append(x)
 		x=self.mp(x)
-		x=self.l3(x);
+		x=self.r(self.l3(x));
 		x=self.ul3(x)
+		L.append(x)
 		x=self.mp(x)
+		return x,L;
+
+class Upsampling(nn.Module):
+	def __init__(self,shape=128):
+		super(Upsampling,self).__init__()
+		self.shape=shape;
+		self.l1=self.__transconv2d(64,8);
+		self.l2=self.__conv2d(64);
+		self.l3=self.__transconv2d(32,16);
+		self.l4=self.__conv2d(32);
+		self.l5=self.__transconv2d(16,32);
+		self.l6=self.__conv2d(16);
+		self.l7=nn.Conv2d(16,1,1,bias=False);
+
+	def __transconv2d(self,dim,ok):
+		x=nn.Sequential(
+		    nn.BatchNorm2d(dim*2),
+		    nn.ConvTranspose2d(dim*2,dim,4,stride=2,bias=False,padding=1),
+		    nn.ReLU(inplace=True)
+		 )
+		return x;
+	def __conv2d(self,dim,bias=False):
+		assert(dim%2==0);
+		x=nn.Sequential(
+		      nn.BatchNorm2d(dim),
+		      nn.Conv2d(dim,dim,3,padding=1,bias=True),
+		      nn.ReLU(inplace=True),
+		      nn.Conv2d(dim,dim,3,padding=1,bias=True),
+		      nn.ReLU()
+		 )
+		return x;
+	def forward(self,x,L=None):
+		x=self.l1(x)
+		x=self.l2(x);
+		x=self.l3(x);
+		x=self.l4(x)
+		x=self.l5(x)
+		x=self.l6(x)
+		print(x.shape)
+		x=F.relu(self.l7(x))
 		return x;
 
-down=DownSampling();
-temp=None;
-for a,_ in IS:
-	temp=a;
-	break;
 
-out=down(temp);
-print(out.shape) # 16,128,8,8---> Upsampling
-	
+
+# down=DownSampling();
+# upsc=Upsampling();
+# temp=None;
+# for a,_ in IS:
+# 	temp=a;
+# 	break;
+
+# out,_=down(temp);
+# print(out.shape)
+# out=upsc(out)
+# print(out.shape)
